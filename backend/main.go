@@ -1,42 +1,50 @@
-
 package main
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 )
 
-type Form struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
+type Feedback struct {
+	Name    string `json:"name"`
+	Email   string `json:"email"`
+	Message string `json:"message"`
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func feedbackHandler(w http.ResponseWriter, r *http.Request) {
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	var f Form
-	err := json.NewDecoder(r.Body).Decode(&f)
+	var fb Feedback
+
+	err := json.NewDecoder(r.Body).Decode(&fb)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	log.Printf("Received form: %+v", f)
+	fmt.Println("New Feedback Received")
+	fmt.Println("Name:", fb.Name)
+	fmt.Println("Email:", fb.Email)
+	fmt.Println("Message:", fb.Message)
+
+	response := map[string]string{
+		"status": "success",
+		"message": "Thank you for your feedback!",
+	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"status": "success",
-		"name": f.Name,
-	})
+	json.NewEncoder(w).Encode(response)
 }
 
 func main() {
-	http.HandleFunc("/api/submit", handler)
 
-	log.Println("Backend running on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	http.HandleFunc("/api/feedback", feedbackHandler)
+
+	fmt.Println("Backend running on :8080")
+	http.ListenAndServe(":8080", nil)
 }

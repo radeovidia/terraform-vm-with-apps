@@ -1,4 +1,3 @@
-
-module demo-backend
+module feedback-api
 
 go 1.21
