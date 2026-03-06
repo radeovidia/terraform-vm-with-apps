@@ -3,7 +3,9 @@ name: Deploy Frontend Microservice
 on:
   push:
     branches: [ "main" ]
-    paths: ['frontend/**']
+    paths: 
+     - 'frontend/**'
+     - 'docker-compose.yml' # Tambahkan ini
 
 jobs:
   build-push:
