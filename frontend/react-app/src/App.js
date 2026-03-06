@@ -6,23 +6,36 @@ function App() {
   const [form, setForm] = useState({ name: '', message: '' });
   const [latest, setLatest] = useState(null);
 
+  // Variabel API agar otomatis deteksi IP VM
+  const API_BASE_URL = `http://${window.location.hostname}:8080/api/feedback`;
+
   // Fungsi ambil data terbaru
   const fetchLatest = async () => {
-    const res = await fetch('/api/feedback/latest');
-    const data = await res.json();
-    setLatest(data);
-    setPage('show');
+    try {
+      const res = await fetch(`${API_BASE_URL}/latest`); // Mengarah ke port 8080
+      const data = await res.json();
+      setLatest(data);
+      setPage('show');
+    } catch (err) {
+      console.error("Gagal mengambil data:", err);
+      alert("Backend belum siap atau Port 8080 belum dibuka di Azure!");
+    }
   };
 
   const send = async (e) => {
     e.preventDefault();
-    await fetch('/api/feedback', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    });
-    alert("Feedback Sent!");
-    fetchLatest(); // Pindah ke halaman response setelah kirim lelelele
+    try {
+      await fetch(API_BASE_URL, { // Mengarah ke port 8080
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      alert("Feedback Sent!");
+      fetchLatest(); // Pindah ke halaman response
+    } catch (err) {
+      console.error("Gagal mengirim data:", err);
+      alert("Gagal kirim! Cek koneksi ke Backend.");
+    }
   };
 
   return (
@@ -59,5 +72,4 @@ function App() {
   );
 }
 
-//commnadtest
 export default App;
