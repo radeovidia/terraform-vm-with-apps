@@ -1,9 +1,9 @@
-name: Deploy Backend Microservice
+name: Deploy frontend Microservice
 
 on:
   push:
     branches: [ "main" ]
-    paths: ['backend/**']
+    paths: ['frontend/**']
 
 jobs:
   build-push:
