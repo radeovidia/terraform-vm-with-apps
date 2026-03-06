@@ -1,15 +1,13 @@
 version: '3.8'
 services:
   backend:
-    build: ./backend
-    container_name: company_be
+    image: radovodoo/company-backend:latest # Pakai image dari Docker Hub
+    ports:
+      - "8080:8080"
+    # HAPUS baris 'build: ./backend' karena di VM tidak ada source code
 
   frontend:
-    build: ./frontend
-    container_name: company_fe
+    image: radovodoo/company-frontend:latest # Pakai image dari Docker Hub
     ports:
       - "80:80"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      - backend
+    # HAPUS baris 'build: ./frontend'
