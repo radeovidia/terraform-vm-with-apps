@@ -1,13 +1,18 @@
 version: '3.8'
+
 services:
   backend:
-    image: radovodoo/company-backend:latest # Pakai image dari Docker Hub
+    image: radovodoo/company-backend:latest # PAKAI IMAGE, BUKAN BUILD
+    container_name: company_be
     ports:
       - "8080:8080"
-    # HAPUS baris 'build: ./backend' karena di VM tidak ada source code
+    restart: always
 
   frontend:
-    image: radovodoo/company-frontend:latest # Pakai image dari Docker Hub
+    image: radovodoo/company-frontend:latest # PAKAI IMAGE, BUKAN BUILD
+    container_name: company_fe
     ports:
       - "80:80"
-    # HAPUS baris 'build: ./frontend'
+    # Catatan: Jika pakai volumes untuk nginx.conf, file config tersebut 
+    # juga harus di-copy ke VM via SCP atau dimasukkan ke dalam Dockerfile.
+    restart: always
