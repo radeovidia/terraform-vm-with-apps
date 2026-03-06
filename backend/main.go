@@ -13,7 +13,7 @@ type Feedback struct {
 
 var (
 	lastFeedback Feedback
-	mu           sync.Mutex // Agar aman dari race condition
+	mu           sync.Mutex // Agar aman dari race condition sss
 )
 
 func main() {
