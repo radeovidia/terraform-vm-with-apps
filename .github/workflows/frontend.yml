@@ -36,8 +36,8 @@ jobs:
           host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          source: "docker-compose.yml"
-          target: "~/app/frontend"
+          source: "docker-compose.yml" # Mengambil file dari root repo
+          target: "~/app/frontend"      # Mengirim ke folder frontend di VM
 
       - name: SSH and Deploy
         uses: appleboy/ssh-action@v1.0.3
@@ -48,8 +48,9 @@ jobs:
           script: |
             mkdir -p ~/app/frontend
             cd ~/app/frontend
-            # Login Docker di VM
-            echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+            # Cek apakah file sudah sampai (untuk debugging di log GitHub)
+            ls -la 
+            echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
             docker compose pull frontend
             docker compose up -d frontend
             docker image prune -f
