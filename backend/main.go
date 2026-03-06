@@ -17,7 +17,7 @@ var (
 )
 
 func main() {
-	// Endpoint untuk SUBMIT (POST)
+	// Endpoint untuk SUBMIT (POST) pancing air
 	http.HandleFunc("/api/feedback", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			mu.Lock()
