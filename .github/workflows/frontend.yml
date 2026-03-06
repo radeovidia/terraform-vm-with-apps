@@ -1,16 +1,15 @@
-name: Deploy Frontend Microservice
+name: Deploy Backend Microservice
 
 on:
   push:
     branches: [ "main" ]
-    paths: ['frontend/**'] # Hanya jalan jika ada perubahan di folder frontend
+    paths: ['backend/**']
 
 jobs:
   build-push:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
       - name: Login Docker Hub
         uses: docker/login-action@v3
         with:
@@ -36,9 +35,8 @@ jobs:
           host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          source: "docker-compose.yml" # Mengambil file dari root repo
-          target: "/home/${{ secrets.VM_USER }}/app/frontend"     # Mengirim ke folder frontend di VM
-          strip_components: 0
+          source: "docker-compose.yml"
+          target: "~/app/frontend"
 
       - name: SSH and Deploy
         uses: appleboy/ssh-action@v1.0.3
@@ -49,9 +47,8 @@ jobs:
           script: |
             mkdir -p ~/app/frontend
             cd ~/app/frontend
-            # Cek apakah file sudah sampai (untuk debugging di log GitHub)
-            ls -la 
-            echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+            # Login agar bisa pull image dari Docker Hub di dalam VM
+            echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
             docker compose pull frontend
             docker compose up -d frontend
             docker image prune -f
