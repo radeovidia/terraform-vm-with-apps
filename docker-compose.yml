@@ -1,0 +1,27 @@
+
+version: "3"
+
+services:
+
+  backend:
+    build: ./backend
+    container_name: golang_api
+    env_file:
+      - .env
+
+  frontend:
+    build: ./frontend
+    container_name: react_app
+    env_file:
+      - .env
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx_proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - frontend
+      - backend
