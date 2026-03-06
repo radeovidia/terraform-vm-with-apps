@@ -1,27 +1,9 @@
 
-# DevOps Technical Test
+RUN:
 
-Stack:
-- Terraform
-- Azure VM
-- Docker Compose
-- Nginx Reverse Proxy
-- React Frontend
-- Golang Backend
-- GitHub Actions CI/CD
+docker compose build
+docker compose up -d
 
-## Deploy Infra
+OPEN:
 
-cd terraform
-
-az login
-terraform init
-terraform apply
-
-## Run locally
-
-docker compose up -d --build
-
-## Access
-
-http://VM_PUBLIC_IP
+http://SERVER_IP

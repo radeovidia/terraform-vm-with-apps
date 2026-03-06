@@ -3,48 +3,38 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 )
 
 type Feedback struct {
 	Name    string `json:"name"`
-	Email   string `json:"email"`
 	Message string `json:"message"`
 }
 
-func feedbackHandler(w http.ResponseWriter, r *http.Request) {
-
-	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	var fb Feedback
-
-	err := json.NewDecoder(r.Body).Decode(&fb)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	fmt.Println("New Feedback Received")
-	fmt.Println("Name:", fb.Name)
-	fmt.Println("Email:", fb.Email)
-	fmt.Println("Message:", fb.Message)
-
-	response := map[string]string{
-		"status": "success",
-		"message": "Thank you for your feedback!",
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
-}
-
 func main() {
+	http.HandleFunc("/api/feedback", func(w http.ResponseWriter, r *http.Request) {
+		// Handle CORS manual karena Nginx akan meneruskan request
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-	http.HandleFunc("/api/feedback", feedbackHandler)
+		if r.Method == "OPTIONS" {
+			return
+		}
 
-	fmt.Println("Backend running on :8080")
-	http.ListenAndServe(":8080", nil)
+		if r.Method == http.MethodPost {
+			var fb Feedback
+			if err := json.NewDecoder(r.Body).Decode(&fb); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			fmt.Printf("Feedback masuk: %s - %s\n", fb.Name, fb.Message)
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(map[string]string{"msg": "Berhasil terkirim!"})
+		}
+	})
+
+	fmt.Println("Backend jalan di port 8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
