@@ -1,13 +1,16 @@
 
-FROM node:18-alpine
+FROM node:18 as build
 
 WORKDIR /app
 
-COPY react-app .
-
+COPY package.json ./
 RUN npm install
+
+COPY . .
 RUN npm run build
 
-RUN npm install -g serve
+FROM nginx:alpine
 
-CMD ["serve","-s","build","-l","3000"]
+COPY --from=build /app/build /usr/share/nginx/html
+
+EXPOSE 80

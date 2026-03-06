@@ -3,8 +3,8 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
-	"os"
 )
 
 type Form struct {
@@ -12,24 +12,31 @@ type Form struct {
 	Email string `json:"email"`
 }
 
-func submit(w http.ResponseWriter, r *http.Request) {
-	var form Form
-	json.NewDecoder(r.Body).Decode(&form)
+func handler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
+	var f Form
+	err := json.NewDecoder(r.Body).Decode(&f)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("Received form: %+v", f)
+
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Success",
+		"status": "success",
+		"name": f.Name,
 	})
 }
 
 func main() {
+	http.HandleFunc("/api/submit", handler)
 
-	port := os.Getenv("APP_PORT")
-
-	if port == "" {
-		port = "8080"
-	}
-
-	http.HandleFunc("/api/submit", submit)
-
-	http.ListenAndServe(":"+port, nil)
+	log.Println("Backend running on :8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }

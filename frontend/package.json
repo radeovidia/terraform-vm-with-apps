@@ -1,5 +1,6 @@
+
 {
-  "name": "react-form-demo",
+  "name": "demo-react",
   "version": "1.0.0",
   "private": true,
   "dependencies": {

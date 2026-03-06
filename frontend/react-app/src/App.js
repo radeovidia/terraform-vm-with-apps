@@ -1,41 +1,43 @@
-
 import { useState } from "react";
 
-function App(){
+function App() {
 
-const [name,setName] = useState("")
-const [email,setEmail] = useState("")
+  const [name,setName] = useState("")
+  const [message,setMessage] = useState("")
 
-const submit = async () =>{
+  const submit = async () => {
 
-await fetch("/api/submit",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({name,email})
-})
+    const res = await fetch("/api/submit",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({name})
+    })
 
+    const data = await res.json()
+    setMessage(data.message)
+  }
+
+  return (
+    <div style={{padding:"40px"}}>
+
+      <h2>Submit Form</h2>
+
+      <input
+        placeholder="Enter your name"
+        value={name}
+        onChange={(e)=>setName(e.target.value)}
+      />
+
+      <button onClick={submit}>
+        Submit
+      </button>
+
+      <p>{message}</p>
+
+    </div>
+  )
 }
 
-return (
-
-<div>
-
-<h1>Submit Form</h1>
-
-<input placeholder="name"
-onChange={e=>setName(e.target.value)}/>
-
-<input placeholder="email"
-onChange={e=>setEmail(e.target.value)}/>
-
-<button onClick={submit}>Submit</button>
-
-</div>
-
-);
-
-}
-
-export default App;
+export default App
