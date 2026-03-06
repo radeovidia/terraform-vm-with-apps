@@ -37,7 +37,8 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           source: "docker-compose.yml" # Mengambil file dari root repo
-          target: "~/app/frontend"      # Mengirim ke folder frontend di VM
+          target: "/home/${{ secrets.VM_USER }}/app/frontend"     # Mengirim ke folder frontend di VM
+          strip_components: 0
 
       - name: SSH and Deploy
         uses: appleboy/ssh-action@v1.0.3
