@@ -22,7 +22,7 @@ function App() {
       body: JSON.stringify(form),
     });
     alert("Feedback Sent!");
-    fetchLatest(); // Pindah ke halaman response setelah kirim lelele
+    fetchLatest(); // Pindah ke halaman response setelah kirim lelelele
   };
 
   return (
