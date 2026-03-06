@@ -1,9 +1,9 @@
-name: Deploy Frontend Microservice
+name: Deploy Frontend
 
 on:
   push:
     branches: [ "main" ]
-    paths: ['frontend/**'] # Hanya jalan jika folder frontend diubah
+    paths: ['frontend/**'] # Hanya jalan jika ada perubahan di folder frontend
 
 jobs:
   build-push:
@@ -15,7 +15,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      
       - name: Build & Push
         uses: docker/build-push-action@v5
         with:
@@ -27,6 +26,17 @@ jobs:
     needs: build-push
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - name: Copy Compose to VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_IP }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          source: "docker-compose.yml" # Ambil dari folder repo
+          target: "~/app/frontend"               # Taruh di folder VM
+          strip_components: 1                    # Agar file langsung di folder frontend, bukan frontend/frontend/
+
       - name: SSH and Deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -34,7 +44,8 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
-            cd ~/app
+            mkdir -p ~/app/frontend
+            cd ~/app/frontend
             docker compose pull frontend
             docker compose up -d frontend
             docker image prune -f

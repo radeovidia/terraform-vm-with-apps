@@ -23,10 +23,21 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/company-backend:latest
 
-  deploy:
+ deploy:
     needs: build-push
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - name: Copy Compose to VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_IP }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          source: "docker-compose.yml" # Ambil dari folder repo
+          target: "~/app/backend"               # Taruh di folder VM
+          strip_components: 1                    # Agar file langsung di folder frontend, bukan frontend/frontend/
+
       - name: SSH and Deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -34,7 +45,8 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
-            cd ~/app
+            mkdir -p ~/app/backend
+            cd ~/app/backend
             docker compose pull backend
             docker compose up -d backend
             docker image prune -f
