@@ -3,7 +3,7 @@ name: Deploy Backend Microservice
 on:
   push:
     branches: [ "main" ]
-    paths: ['backend/**'] # Hanya jalan jika folder backend diubah
+    paths: ['backend/**']
 
 jobs:
   build-push:
@@ -23,20 +23,22 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/company-backend:latest
 
- deploy:
+  # INI HARUS SEJAJAR DENGAN build-push:
+  deploy:
     needs: build-push
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Copy Compose to VM
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          source: "docker-compose.yml" # Ambil dari folder repo
-          target: "~/app/backend"               # Taruh di folder VM
-          strip_components: 1                    # Agar file langsung di folder frontend, bukan frontend/frontend/
+          source: "docker-compose.yml"
+          target: "~/app/backend"
+          # strip_components dihapus karena file docker-compose.yml ada di root, bukan di dalam subfolder
 
       - name: SSH and Deploy
         uses: appleboy/ssh-action@v1.0.3
@@ -47,6 +49,8 @@ jobs:
           script: |
             mkdir -p ~/app/backend
             cd ~/app/backend
+            # Opsional: Login docker di VM jika image bersifat private
+            echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
             docker compose pull backend
             docker compose up -d backend
             docker image prune -f
