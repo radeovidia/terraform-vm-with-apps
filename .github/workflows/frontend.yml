@@ -1,4 +1,4 @@
-name: Deploy frontend Microservice
+name: Deploy Frontend Microservice
 
 on:
   push:
