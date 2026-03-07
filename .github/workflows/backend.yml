@@ -1,44 +1,36 @@
-name: Backend CI/CD
+name: Backend Deploy
 
 on:
   push:
     paths:
       - "backend/**"
+      - "docker-compose.yml"
   workflow_dispatch:
 
 jobs:
-  deploy:
+  deploy-backend:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-      - uses: actions/setup-go@v4
-        with:
-          go-version: "1.21"
-
-      - name: Build
-        run: |
-          cd backend
-          go build -o server
-
-      - name: Upload to VM
+      - name: Copy backend to VM
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          source: "backend/server"
-          target: "/home/${{ secrets.VM_USER }}/app/backend"
+          source: "backend"
+          target: "/home/${{ secrets.VM_USER }}/app"
 
-      - name: Run backend
+      - name: Deploy backend container
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
-            cd ~/app/backend
-            pkill server || true
-            chmod +x server
-            nohup ./server > app.log 2>&1 &
+            cd ~/app
+            docker compose build backend
+            docker compose up -d backend nginx

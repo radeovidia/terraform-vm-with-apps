@@ -1,4 +1,4 @@
-name: Frontend CI/CD
+name: Frontend Deploy
 
 on:
   push:
@@ -7,15 +7,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  deploy-frontend:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
       - name: Build React
         run: |
@@ -23,20 +20,22 @@ jobs:
           npm install
           npm run build
 
-      - name: Upload build
+      - name: Copy frontend to VM
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          source: "frontend/react-app/build"
-          target: "/home/${{ secrets.VM_USER }}/app/frontend"
+          source: "frontend"
+          target: "/home/${{ secrets.VM_USER }}/app"
 
-      - name: Restart nginx
+      - name: Restart containers
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
-            sudo systemctl restart nginx
+            cd ~/app
+            docker compose build frontend
+            docker compose up -d frontend nginx
