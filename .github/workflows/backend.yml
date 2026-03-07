@@ -7,40 +7,38 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Setup Go
-        uses: actions/setup-go@v4
+      - uses: actions/setup-go@v4
         with:
           go-version: "1.21"
 
-      - name: Build Backend
+      - name: Build
         run: |
           cd backend
           go build -o server
 
-      - name: Copy Backend to Azure VM via SCP
+      - name: Upload to VM
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           source: "backend/server"
-          target: "/home/${{ secrets.VM_USER }}/app"
+          target: "/home/${{ secrets.VM_USER }}/app/backend"
 
-      - name: Restart Backend via SSH
+      - name: Run backend
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
-            cd /home/${{ secrets.VM_USER }}/app
+            cd ~/app/backend
             pkill server || true
             chmod +x server
             nohup ./server > app.log 2>&1 &

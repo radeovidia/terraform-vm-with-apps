@@ -5,37 +5,34 @@ on:
     paths:
       - "frontend/**"
   workflow_dispatch:
-    
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Setup Node
-        uses: actions/setup-node@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      - name: Install Dependencies & Build React
+      - name: Build React
         run: |
           cd frontend/react-app
           npm install
           npm run build
 
-      - name: Copy Build to Azure VM via SCP
+      - name: Upload build
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           source: "frontend/react-app/build"
-          target: "/home/${{ secrets.VM_USER }}/app"
+          target: "/home/${{ secrets.VM_USER }}/app/frontend"
 
-      - name: Restart Nginx via SSH
+      - name: Restart nginx
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_IP }}
