@@ -2,44 +2,66 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
-	"sync"
+	"strings"
+	"time"
 )
 
-type Feedback struct {
-	Name    string `json:"name"`
-	Message string `json:"message"`
+type Registration struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	City  string `json:"city"`
 }
 
-var (
-	lastFeedback Feedback
-	mu           sync.Mutex
-)
+type Response struct {
+	Message string       `json:"message"`
+	Data    Registration `json:"data"`
+	Time    string       `json:"time"`
+}
 
-// Middleware CORS: Izin buat browser
-func enableCORS(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+func registerHandler(w http.ResponseWriter, r *http.Request) {
 
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-		next(w, r)
+	// Only allow POST
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var reg Registration
+
+	err := json.NewDecoder(r.Body).Decode(&reg)
+	if err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		return
+	}
+
+	// Process data
+	reg.Name = strings.ToUpper(reg.Name)
+
+	resp := Response{
+		Message: "Registration received successfully!",
+		Data:    reg,
+		Time:    time.Now().Format(time.RFC1123),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
 	}
 }
 
 func main() {
-	http.HandleFunc("/api/feedback", enableCORS(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			mu.Lock()
-			json.NewDecoder(r.Body).Decode(&lastFeedback)
-			mu.Unlock()
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]string{"msg": "Sukses!"})
-		}
-	}))
-	http.ListenAndServe(":8080", nil)
+
+	http.HandleFunc("/api/register", registerHandler)
+
+	log.Println("Server running on :8080")
+
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

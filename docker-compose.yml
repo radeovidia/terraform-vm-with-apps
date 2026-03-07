@@ -1,25 +1,23 @@
+version: "3.9"
+
 services:
   backend:
-    image: radovodoo/company-backend:latest
-    container_name: company_be
-    restart: always
-    # Hapus ports 8080 agar lebih aman, komunikasi lewat network internal saja
-    networks:
-      - micro-net
+    build: ./backend
+    container_name: go-backend
+    ports:
+      - "8080:8080"
 
   frontend:
-    image: radovodoo/company-frontend:latest
-    container_name: company_fe
+    build: ./frontend
+    container_name: react-frontend
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./frontend/react-app/build:/usr/share/nginx/html
     ports:
       - "80:80"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - backend
-    networks:
-      - micro-net
-
-# Inilah 'ruangan' yang menyatukan mereka
-networks:
-  micro-net:
-    driver: bridge

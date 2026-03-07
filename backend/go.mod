@@ -1,2 +1,3 @@
-module company-backend
+
+module registration-app
 go 1.21

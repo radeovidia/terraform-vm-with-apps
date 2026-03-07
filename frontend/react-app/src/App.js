@@ -1,92 +1,45 @@
-import React, { useState, useEffect } from 'react';
-import './App.css';
 
-function App() {
-  const [page, setPage] = useState('form'); // 'form' atau 'show'
-  const [form, setForm] = useState({ name: '', message: '' });
-  const [latest, setLatest] = useState(null);
+import React,{useState} from "react";
+import "./App.css";
 
-  // Variabel API agar otomatis deteksi IP VM dan mengarah ke Port 8080
-  const API_BASE_URL = `http://${window.location.hostname}:8080/api/feedback`;
+export default function App(){
 
-  // Fungsi ambil data terbaru
-  const fetchLatest = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/latest`); 
-      const data = await res.json();
-      setLatest(data);
-      setPage('show');
-    } catch (err) {
-      console.error("Gagal mengambil data:", err);
-      alert("Gagal konek ke Backend! Pastikan Port 8080 sudah dibuka di Azure.");
-    }
-  };
+const [form,setForm]=useState({name:"",email:"",city:""});
+const [resp,setResp]=useState(null);
 
-  const send = async (e) => {
-    e.preventDefault();
-    try {
-      // PERBAIKAN: Menggunakan API_BASE_URL (Port 8080), bukan path relatif
-      const res = await fetch(API_BASE_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
+const change=e=>setForm({...form,[e.target.name]:e.target.value});
 
-      if (res.ok) {
-        alert("Feedback Sent!");
-        setForm({ name: '', message: '' }); // Reset form
-        fetchLatest(); // Pindah ke halaman response
-      } else {
-        alert("Server bermasalah (Gagal POST)");
-      }
-    } catch (err) {
-      console.error("Error:", err);
-      alert("Koneksi Error! Cek apakah Backend jalan di port 8080.");
-    }
-  };
-
-  return (
-    <div className="App">
-      <nav>
-        <h1 onClick={() => setPage('form')} style={{cursor:'pointer'}}>TechCorp</h1>
-        <button onClick={fetchLatest} className="btn-nav">View Last Response</button>
-      </nav>
-
-      {page === 'form' ? (
-        <div className="content">
-          <div className="hero"><h2>Contact Us</h2></div>
-          <form onSubmit={send} className="form-card">
-            <input 
-              placeholder="Name" 
-              value={form.name} 
-              onChange={e => setForm({...form, name: e.target.value})} 
-              required 
-            />
-            <textarea 
-              placeholder="Message" 
-              value={form.message} 
-              onChange={e => setForm({...form, message: e.target.value})} 
-              required 
-            />
-            <button type="submit">Submit Feedback</button>
-          </form>
-        </div>
-      ) : (
-        <div className="content">
-          <div className="hero"><h2>Latest Response</h2></div>
-          <div className="form-card">
-            {latest && latest.name ? (
-              <>
-                <p><strong>From:</strong> {latest.name}</p>
-                <p><strong>Message:</strong> {latest.message}</p>
-              </>
-            ) : <p>No feedback yet.</p>}
-            <button onClick={() => setPage('form')}>Back to Form</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+const submit=async e=>{
+e.preventDefault();
+const r=await fetch("/api/register",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify(form)
+});
+const d=await r.json();
+setResp(d);
 }
 
-export default App;
+return(
+<div className="container">
+<h1>🚀 Online Registration</h1>
+
+<form onSubmit={submit} className="card">
+<input name="name" placeholder="Full Name" onChange={change}/>
+<input name="email" placeholder="Email" onChange={change}/>
+<input name="city" placeholder="City" onChange={change}/>
+<button type="submit">Submit</button>
+</form>
+
+{resp && (
+<div className="result">
+<h2>Backend Response</h2>
+<p>Name: {resp.data.name}</p>
+<p>Email: {resp.data.email}</p>
+<p>City: {resp.data.city}</p>
+<p>Processed: {resp.time}</p>
+</div>
+)}
+</div>
+)
+}

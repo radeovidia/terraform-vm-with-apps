@@ -1,56 +1,46 @@
-name: Deploy Backend Microservice
+name: Backend CI/CD
 
 on:
   push:
-    branches: [ "main" ]
-    paths: ['backend/**']
+    paths:
+      - "backend/**"
   workflow_dispatch:
 
 jobs:
-  build-push:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Login Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      
-      - name: Build & Push
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/company-backend:latest
 
-  deploy:
-    needs: build-push
-    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repo
+        uses: actions/checkout@v3
 
-      - name: Copy Compose to VM
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
+
+      - name: Build Backend
+        run: |
+          cd backend
+          go build -o server
+
+      - name: Copy Backend to Azure VM via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.VM_IP }}
+          host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          source: "docker-compose.yml"
-          target: "~/app/backend"
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "backend/server"
+          target: "/home/${{ secrets.VM_USER }}/app"
 
-      - name: SSH and Deploy
+      - name: Restart Backend via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.VM_IP }}
+          host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            mkdir -p ~/app/backend
-            cd ~/app/backend
-            # Login agar bisa pull image dari Docker Hub di dalam VM
-            echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-            docker compose pull backend
-            docker compose down
-            docker compose up -d --force-recreate backend
-            docker image prune -f
+            cd /home/${{ secrets.VM_USER }}/app
+            pkill server || true
+            chmod +x server
+            nohup ./server > app.log 2>&1 &

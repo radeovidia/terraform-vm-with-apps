@@ -1,58 +1,45 @@
-name: Deploy Frontend Microservice
+name: Frontend CI/CD
 
 on:
   push:
-    branches: [ "main" ]
-    paths: 
-     - 'frontend/**'
-     - 'docker-compose.yml' # Tambahkan ini
+    paths:
+      - "frontend/**"
   workflow_dispatch:
-  
+    
+
 jobs:
-  build-push:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Login Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      
-      - name: Build & Push
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/company-frontend:latest
 
-  deploy:
-    needs: build-push
-    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-      - name: Copy Compose to VM
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies & Build React
+        run: |
+          cd frontend/react-app
+          npm install
+          npm run build
+
+      - name: Copy Build to Azure VM via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.VM_IP }}
+          host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          source: "docker-compose.yml"
-          target: "~/app/frontend"
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "frontend/react-app/build"
+          target: "/home/${{ secrets.VM_USER }}/app"
 
-      - name: SSH and Deploy
+      - name: Restart Nginx via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.VM_IP }}
+          host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            mkdir -p ~/app/frontend
-            cd ~/app/frontend
-            # Login agar bisa pull image dari Docker Hub di dalam VM
-            echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-            docker compose pull frontend
-            docker compose down
-            docker compose up -d --force-recreate frontend
-            docker image prune -f
+            sudo systemctl restart nginx
