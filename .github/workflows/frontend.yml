@@ -6,27 +6,31 @@ on:
       - "frontend/**"
       - "docker-compose.yml"
   workflow_dispatch:
-    
 
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-      - name: Copy frontend to VM
+      - name: Build React
+        run: |
+          cd frontend/react-app
+          npm install
+          npm run build
+
+      - name: Copy files to VM
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          source: |
-            ./frontend
-            docker-compose.yml
+          source: "."
           target: "/home/${{ secrets.VM_USER }}/app"
 
-      - name: Deploy frontend
+      - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_IP }}
@@ -34,4 +38,5 @@ jobs:
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
             cd ~/app
-            docker compose up -d --build frontend
+            docker compose down || true
+            docker compose up -d --build
