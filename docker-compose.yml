@@ -2,17 +2,28 @@ version: '3.8'
 
 services:
   backend:
-    image: radovodoo/company-backend:latest # PAKAI IMAGE, BUKAN BUILD
+    image: radovodoo/company-backend:latest
     container_name: company_be
-    ports:
-      - "8080:8080"
+    # Port 8080 dihapus dari public (opsional tapi disarankan agar aman)
+    # ports: 
+    #   - "8080:8080"
     restart: always
+    networks:
+      - company-network
 
   frontend:
-    image: radovodoo/company-frontend:latest # PAKAI IMAGE, BUKAN BUILD
+    image: radovodoo/company-frontend:latest
     container_name: company_fe
     ports:
       - "80:80"
-    # Catatan: Jika pakai volumes untuk nginx.conf, file config tersebut 
-    # juga harus di-copy ke VM via SCP atau dimasukkan ke dalam Dockerfile.
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     restart: always
+    depends_on:
+      - backend
+    networks:
+      - company-network
+
+networks:
+  company-network:
+    driver: bridge
