@@ -1,19 +1,25 @@
-version: '3.8'
-
 services:
-  # Bagian Backend
   backend:
-    image: radovodoo/company-backend:latest  # GUNAKAN IMAGE, BUKAN BUILD
+    image: radovodoo/company-backend:latest
     container_name: company_be
-    ports:
-      - "8080:8080"
     restart: always
+    # Hapus ports 8080 agar lebih aman, komunikasi lewat network internal saja
+    networks:
+      - micro-net
 
-  # Bagian Frontend
   frontend:
-    image: radovodoo/company-frontend:latest # GUNAKAN IMAGE, BUKAN BUILD
+    image: radovodoo/company-frontend:latest
     container_name: company_fe
     ports:
       - "80:80"
-    restart: always
-    # PENTING: Hapus baris 'volumes' jika file nginx.conf tidak ada di VM
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+    networks:
+      - micro-net
+
+# Inilah 'ruangan' yang menyatukan mereka
+networks:
+  micro-net:
+    driver: bridge
