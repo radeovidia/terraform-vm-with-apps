@@ -6,36 +6,44 @@ function App() {
   const [form, setForm] = useState({ name: '', message: '' });
   const [latest, setLatest] = useState(null);
 
-  // Variabel API agar otomatis deteksi IP VM
+  // Variabel API agar otomatis deteksi IP VM dan mengarah ke Port 8080
   const API_BASE_URL = `http://${window.location.hostname}:8080/api/feedback`;
 
   // Fungsi ambil data terbaru
   const fetchLatest = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/latest`); // Mengarah ke port 8080
+      const res = await fetch(`${API_BASE_URL}/latest`); 
       const data = await res.json();
       setLatest(data);
       setPage('show');
     } catch (err) {
       console.error("Gagal mengambil data:", err);
-      alert("Backend belum siap atau Port 8080 belum dibuka di Azure!");
+      alert("Gagal konek ke Backend! Pastikan Port 8080 sudah dibuka di Azure.");
     }
   };
 
   const send = async (e) => {
     e.preventDefault();
     try {
-        // Nginx bakal otomatis nyambungin ini ke backend
-        await fetch('/api/feedback', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(form),
-        });
-        alert("Sent!");
+      // PERBAIKAN: Menggunakan API_BASE_URL (Port 8080), bukan path relatif
+      const res = await fetch(API_BASE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+
+      if (res.ok) {
+        alert("Feedback Sent!");
+        setForm({ name: '', message: '' }); // Reset form
+        fetchLatest(); // Pindah ke halaman response
+      } else {
+        alert("Server bermasalah (Gagal POST)");
+      }
     } catch (err) {
-        console.error("Error:", err);
+      console.error("Error:", err);
+      alert("Koneksi Error! Cek apakah Backend jalan di port 8080.");
     }
-};
+  };
 
   return (
     <div className="App">
@@ -48,8 +56,18 @@ function App() {
         <div className="content">
           <div className="hero"><h2>Contact Us</h2></div>
           <form onSubmit={send} className="form-card">
-            <input placeholder="Name" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
-            <textarea placeholder="Message" value={form.message} onChange={e => setForm({...form, message: e.target.value})} required />
+            <input 
+              placeholder="Name" 
+              value={form.name} 
+              onChange={e => setForm({...form, name: e.target.value})} 
+              required 
+            />
+            <textarea 
+              placeholder="Message" 
+              value={form.message} 
+              onChange={e => setForm({...form, message: e.target.value})} 
+              required 
+            />
             <button type="submit">Submit Feedback</button>
           </form>
         </div>
