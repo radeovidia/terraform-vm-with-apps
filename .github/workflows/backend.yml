@@ -5,15 +5,13 @@ on:
     paths:
       - "backend/**"
       - "docker-compose.yml"
-  workflow_dispatch:
 
 jobs:
   deploy-backend:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Copy backend to VM
         uses: appleboy/scp-action@v0.1.7
@@ -21,10 +19,12 @@ jobs:
           host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          source: "backend"
+          source: |
+            backend
+            docker-compose.yml
           target: "/home/${{ secrets.VM_USER }}/app"
 
-      - name: Deploy backend container
+      - name: Deploy backend
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_IP }}
@@ -32,5 +32,4 @@ jobs:
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
             cd ~/app
-            docker compose build backend
-            docker compose up -d backend nginx
+            docker compose up -d --build backend

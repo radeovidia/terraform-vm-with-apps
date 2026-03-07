@@ -4,21 +4,14 @@ on:
   push:
     paths:
       - "frontend/**"
-  workflow_dispatch:
+      - "docker-compose.yml"
 
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      - name: Build React
-        run: |
-          cd frontend/react-app
-          npm install
-          npm run build
+      - uses: actions/checkout@v3
 
       - name: Copy frontend to VM
         uses: appleboy/scp-action@v0.1.7
@@ -26,10 +19,12 @@ jobs:
           host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          source: "frontend"
+          source: |
+            frontend
+            docker-compose.yml
           target: "/home/${{ secrets.VM_USER }}/app"
 
-      - name: Restart containers
+      - name: Deploy frontend
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_IP }}
@@ -37,5 +32,4 @@ jobs:
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
             cd ~/app
-            docker compose build frontend
-            docker compose up -d frontend nginx
+            docker compose up -d --build frontend
