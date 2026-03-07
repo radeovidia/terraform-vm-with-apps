@@ -25,16 +25,15 @@ function App() {
   const send = async (e) => {
     e.preventDefault();
     try {
-        // CUKUP PAKAI '/api/feedback', Nginx bakal otomatis nembak ke backend
+        // Nginx bakal otomatis nyambungin ini ke backend
         await fetch('/api/feedback', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(form),
         });
-        alert("Feedback Sent!");
-        fetchLatest(); 
+        alert("Sent!");
     } catch (err) {
-        console.error("Gagal kirim:", err);
+        console.error("Error:", err);
     }
 };
 

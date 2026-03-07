@@ -16,7 +16,7 @@ var (
 	mu           sync.Mutex
 )
 
-// Middleware buat beresin masalah CORS
+// Middleware CORS: Izin buat browser
 func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -32,25 +32,14 @@ func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func main() {
-	// Endpoint POST buat terima feedback
 	http.HandleFunc("/api/feedback", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			mu.Lock()
 			json.NewDecoder(r.Body).Decode(&lastFeedback)
 			mu.Unlock()
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]string{"msg": "Data masuk!"})
-			return
+			json.NewEncoder(w).Encode(map[string]string{"msg": "Sukses!"})
 		}
 	}))
-
-	// Endpoint GET buat ambil data terakhir
-	http.HandleFunc("/api/feedback/latest", enableCORS(func(w http.ResponseWriter, r *http.Request) {
-		mu.Lock()
-		defer mu.Unlock()
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(lastFeedback)
-	}))
-
 	http.ListenAndServe(":8080", nil)
 }

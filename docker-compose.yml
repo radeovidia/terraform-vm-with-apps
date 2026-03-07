@@ -1,12 +1,11 @@
 version: '3.8'
-
 services:
   backend:
     image: radovodoo/company-backend:latest
     container_name: company_be
     restart: always
     networks:
-      - micro-net
+      - company-net
 
   frontend:
     image: radovodoo/company-frontend:latest
@@ -14,13 +13,12 @@ services:
     ports:
       - "80:80"
     volumes:
-      # Map config nginx dari VM ke dalam kontainer
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - backend
     networks:
-      - micro-net
+      - company-net
 
 networks:
-  micro-net:
+  company-net:
     driver: bridge
