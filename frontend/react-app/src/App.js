@@ -25,18 +25,18 @@ function App() {
   const send = async (e) => {
     e.preventDefault();
     try {
-      await fetch(API_BASE_URL, { // Mengarah ke port 8080
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-      alert("Feedback Sent!");
-      fetchLatest(); // Pindah ke halaman response
+        // CUKUP PAKAI '/api/feedback', Nginx bakal otomatis nembak ke backend
+        await fetch('/api/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(form),
+        });
+        alert("Feedback Sent!");
+        fetchLatest(); 
     } catch (err) {
-      console.error("Gagal mengirim data:", err);
-      alert("Gagal kirim! Cek koneksi ke Backend.");
+        console.error("Gagal kirim:", err);
     }
-  };
+};
 
   return (
     <div className="App">
