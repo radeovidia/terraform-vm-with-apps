@@ -13,29 +13,48 @@ type Feedback struct {
 
 var (
 	lastFeedback Feedback
-	mu           sync.Mutex // Agar aman dari race condition sss
+	mu           sync.Mutex
 )
 
+// Middleware untuk handle CORS
+func enableCORS(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Izinkan akses dari mana saja
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+		// Jika browser kirim 'Preflight' (OPTIONS), langsung bales OK
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next(w, r)
+	}
+}
+
 func main() {
-	// Endpoint untuk SUBMIT (POST) pancing air
-	http.HandleFunc("/api/feedback", func(w http.ResponseWriter, r *http.Request) {
+	// Endpoint SUBMIT
+	http.HandleFunc("/api/feedback", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			mu.Lock()
 			json.NewDecoder(r.Body).Decode(&lastFeedback)
 			mu.Unlock()
-			w.WriteHeader(http.StatusOK)
+			
+			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]string{"msg": "Data diterima!"})
 			return
 		}
-	})
+	}))
 
-	// Endpoint untuk AMBIL data terakhir (GET)
-	http.HandleFunc("/api/feedback/latest", func(w http.ResponseWriter, r *http.Request) {
+	// Endpoint GET
+	http.HandleFunc("/api/feedback/latest", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		mu.Lock()
 		defer mu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(lastFeedback)
-	})
+	}))
 
 	http.ListenAndServe(":8080", nil)
 }
