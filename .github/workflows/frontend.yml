@@ -29,17 +29,17 @@ jobs:
       - name: Copy Build to Azure VM via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.VM_HOST }}
+          host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.VM_SSH_KEY }}
           source: "frontend/react-app/build"
           target: "/home/${{ secrets.VM_USER }}/app"
 
       - name: Restart Nginx via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.VM_HOST }}
+          host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.VM_SSH_KEY }}
           script: |
             sudo systemctl restart nginx
