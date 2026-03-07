@@ -53,5 +53,6 @@ jobs:
             # Login agar bisa pull image dari Docker Hub di dalam VM
             echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
             docker compose pull frontend
+            docker compose down
             docker compose up -d --force-recreate frontend
             docker image prune -f
