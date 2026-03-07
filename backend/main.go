@@ -21,6 +21,8 @@ type Response struct {
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Incoming request: method=%s path=%s origin=%s", r.Method, r.URL.Path, r.Header.Get("Origin"))
+
 	w.Header().Set("Access-Control-Allow-Origin", "http://40.65.149.148")
 	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
@@ -36,7 +38,6 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var reg Registration
-
 	err := json.NewDecoder(r.Body).Decode(&reg)
 	if err != nil {
 		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
@@ -52,7 +53,6 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
