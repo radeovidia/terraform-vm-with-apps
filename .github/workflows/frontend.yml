@@ -5,6 +5,8 @@ on:
     paths:
       - "frontend/**"
       - "docker-compose.yml"
+  workflow_dispatch:
+    
 
 jobs:
   deploy-frontend:
